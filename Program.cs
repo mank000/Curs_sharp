@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.IO;
+using static aeroflot.Aeroflot;
 
 namespace aeroflot;
 class Aeroflot
@@ -18,7 +19,7 @@ class Aeroflot
                          "Пункт назначения: " + this.Destination + "\n" + 
                          "Время отправления: " + this.DepartureTime.ToString() + "\n" + 
                          "Время прибытия: " + this.ArriveTime.ToString() + "\n" + 
-                         "Свободных мест: " + this.FreePlace.ToString() + "\n"; 
+                         "Свободных мест: " + this.FreePlace.ToString(); 
             return Out;
         }
     }
@@ -31,12 +32,13 @@ class Aeroflot
 
     public static Flight MakeFlight()
     {
+        /*Создание записи.*/
         Flight new_flight = new Flight();
         Console.WriteLine("Введите номер рейса: ");
         new_flight.NumberFlight = Convert.ToInt32(Console.ReadLine());
         Console.WriteLine("Пункт назначения: ");
         new_flight.Destination = Console.ReadLine();
-        Console.WriteLine("Время отправления: ");
+        Console.WriteLine("Время отправления(в формате H:mm или HH:mm): ");
         TimeOnly time;
         while (!TimeOnly.TryParseExact(Console.ReadLine(), TIMEFORMATS, out time))
         {
@@ -56,7 +58,6 @@ class Aeroflot
 
         return new_flight;
     }
-
     public static void HelloUser()
     {
         /*Вывод встречающего предложения.*/
@@ -77,7 +78,8 @@ class Aeroflot
 
     public static void MakeFile(StreamWriter OutPut, Flight[] Flights)
     {
-        OutPut.WriteLine("Количество записей в файле: "+ Flights.Length);
+        /*Создание файла.*/
+        OutPut.WriteLine("Количество записей в файле: " + Flights.Length);
 
         for (int i = 0; i < Flights.Length; i++)
         {
@@ -88,6 +90,7 @@ class Aeroflot
 
     public static void ReadFile(StreamReader OutRead)
     {
+        /*Вывод файла в консоль.*/
         Console.Clear();
 
         string TextOfFile = OutRead.ReadToEnd();
@@ -106,6 +109,7 @@ class Aeroflot
 
     public static void FindCity(Flight[] Flights)
     {
+        /*Вывод задания про город*/
 
         bool key = false;
         
@@ -138,8 +142,9 @@ class Aeroflot
 
     }
 
-    public static Flight[]? ReadValuablesFromfile(StreamReader InRead)
+    public static Flight[] ReadValuablesFromfile(StreamReader InRead)
     {
+        /*Читаем файл*/
         string? line;
         line = InRead.ReadLine();
 
@@ -183,6 +188,7 @@ class Aeroflot
 
     public static void MakeDifferentFile(Flight[] Flights, StreamWriter OutPut)
     {
+        /*Создаем файл по заданию.*/
         for (int i = 0; i < Flights.Length; i++)
         {
             OutPut.WriteLine("Номер рейса: " + Flights[i].NumberFlight + "\n" +
@@ -193,34 +199,45 @@ class Aeroflot
         Console.ReadKey();
     }
 
-    public static Flight[]? DeleteFlight(Flight[] Flights, int FlightToDel)
+    public static Flight[] DeleteFlight(Flight[] Flights, int FlightToDel)
     {
-        Flight[]? FlightsDels;
+        /*Удаление записи*/
+        Flight[] FlightsDels = Flights;
         bool key = false;
+        bool deleted = false;
         int IndexOfDeleted = 0;
 
         foreach (var Flight in Flights)
         {
             if (Flight.NumberFlight == FlightToDel)
-            {
-
+            {            
                 key = true;
-                break;
+                deleted = true;
+            }
+            if (key)
+            {
+                FlightsDels = new Flight[Flights.Length - 1];
+                Array.Copy(Flights, 0, FlightsDels, 0, IndexOfDeleted);
+                Array.Copy(Flights, IndexOfDeleted + 1, FlightsDels, IndexOfDeleted, Flights.Length - IndexOfDeleted - 1);
+                key = false;
             }
             IndexOfDeleted++;
         }
-        if (key)
+        if (!deleted)
         {
-            FlightsDels = new Flight[Flights.Length - 1];
-            Array.Copy(Flights, 0, FlightsDels, 0, IndexOfDeleted);
-            Array.Copy(Flights, IndexOfDeleted + 1, FlightsDels, IndexOfDeleted, Flights.Length - IndexOfDeleted - 1);
+            Console.WriteLine("Указанного номера не существует.\nНажмите любую клавишу чтобы продолжить...");
+            Console.ReadKey();
+
             return FlightsDels;
         }
-        return null;
+        Console.WriteLine("Запись удалена.\nНажмите любую клавишу чтобы продолжить...");
+        Console.ReadKey();
+        return FlightsDels;
     }
 
     public static Flight[] EditFlight(Flight[] Flights, int FlightToEdit)
     {
+        /*Изменение записи*/
         bool key = false;
         int IndexOfEdited = 0;
 
@@ -237,9 +254,46 @@ class Aeroflot
         {
             Console.WriteLine("Введите количетсво свободных мест: ");
             Flights[IndexOfEdited].FreePlace = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine("Количество мест успешно изменено.");
+            Console.WriteLine("Запись изменена.\nНажмите любую клавишу чтобы продолжить...");
+            Console.ReadKey();
+        }
+        else
+        {
+            Console.WriteLine("Заданного рейса не существует.");
         }
         return Flights;
+    }
+
+    public static Flight[] AddToFile(Flight[] Flights)
+    {
+        /*Добавляет в конец файла ещё одну запись.*/
+        Flight[] NewArrayOfFlights = new Flight[Flights.Length + 1];
+        Flight NewFlight = MakeFlight();
+        
+        Array.Copy(Flights, NewArrayOfFlights, Flights.Length);
+
+        NewArrayOfFlights[Flights.Length] = NewFlight;
+
+        return NewArrayOfFlights ;
+    }
+
+    public static StreamReader? FileCheckReader (string FilePath)
+    {
+        /*Проверяет файл на работоспособность. + Создание объекта чтения файла*/
+        try
+        {
+            StreamReader OutRead = new StreamReader(FilePath);
+            return OutRead;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Ошибка файла: " + ex.Message);
+            Console.WriteLine("Попробуйте пересоздать файл.");
+
+            Console.WriteLine("\nНажмите любую клавишу чтобы продолжить...");
+            Console.ReadKey();
+            return null;
+        }
     }
 
     public static void Main(String[] args)
@@ -264,22 +318,26 @@ class Aeroflot
                         break;
                     }
                 case 1:
-                    {
-                        Console.Clear();
-                        Console.WriteLine("Данные будут в виде:\n" +
-                            "№ рейса\n" +
-                            "Пункт назначения\n" +
-                            "Время вылета\n" +
-                            "Время прибытия\n" +
-                            "Количество свободных мест в салоне\n");
-
+                    { 
                         Console.WriteLine("Введите количество рейсов: ");
-                        int NumsOfFlights = Convert.ToInt32(Console.ReadLine());
+                        int NumsOfFlights;
+                        while (!int.TryParse(Console.ReadLine(), out NumsOfFlights))
+                        {
+                            Console.WriteLine("Введите именно число!");
+                        }
+
                         Flights = new Flight[NumsOfFlights];
 
                         for (int i = 0; i < NumsOfFlights; i++)
                         {
-                            Flights[i] = MakeFlight();
+                            Console.Clear();
+                            Console.WriteLine("Данные будут в виде:\n" +
+                                "№ рейса\n" +
+                                "Пункт назначения\n" +
+                                "Время вылета\n" +
+                                "Время прибытия\n" +
+                                "Количество свободных мест в салоне\n");
+                        Flights[i] = MakeFlight();
                         }
 
                         StreamWriter OutPut = new StreamWriter(FILEPATH);
@@ -290,32 +348,46 @@ class Aeroflot
                         Console.WriteLine("Файл создан успешно.");
                         break;
                     }
-                case 2: 
+                case 2:  
                     {
-                        StreamReader OutRead = new StreamReader(FILEPATH);
+                        StreamReader? OutRead = FileCheckReader(FILEPATH);
+
+                        if (OutRead == null)
+                        {
+                            break;
+                        }
+
                         ReadFile(OutRead);
                         OutRead.Close();
+
                         break;
                     }
                 case 3:
                     {
-                        if (Flights == null)
+                        StreamReader? OutRead = FileCheckReader(FILEPATH);
+
+                        if (OutRead == null)
                         {
-                            StreamReader OutRead = new StreamReader(FILEPATH);
-                            Flights = ReadValuablesFromfile(OutRead);
-                            OutRead.Close();
+                            break;
                         }
+                        Flights = ReadValuablesFromfile(OutRead);
+                        OutRead.Close();
+
                         FindCity(Flights);
                         break;
                     }
                 case 4:
                     {
-                        if (Flights == null)
+                        StreamReader? OutRead = FileCheckReader(FILEPATH);
+
+                        if (OutRead == null)
                         {
-                            StreamReader OutRead = new StreamReader(FILEPATH);
-                            Flights = ReadValuablesFromfile(OutRead);
-                            OutRead.Close();
+                            break;
                         }
+
+                        Flights = ReadValuablesFromfile(OutRead);
+
+                        OutRead.Close();
 
                         StreamWriter OutPut = new StreamWriter(FILEPATHDIFF);
                         MakeDifferentFile(Flights, OutPut);
@@ -324,93 +396,98 @@ class Aeroflot
                     }
                 case 5:
                     {
-                        string[] Lines = File.ReadAllLines(FILEPATHDIFF);
 
-                        foreach (var Line in Lines)
+                        StreamReader? OutRead = FileCheckReader(FILEPATHDIFF);
+
+                        if (OutRead == null)
                         {
-                            Console.WriteLine(Line);
+                            break;
                         }
 
-                        Console.WriteLine("\nНажмите любую клавишу чтобы продолжить...");
-                        Console.ReadKey();
+                        ReadFile(OutRead);
+                        OutRead.Close();
 
                         break;
                     }
                 case 6:
                     {
-                        Console.Clear();
                         Console.WriteLine("Добавление новой записи в файл.");
 
-                        Flight new_flight = MakeFlight();
-                        StreamWriter OutPut = new StreamWriter(FILEPATH, true);
-                        OutPut.WriteLine(new_flight.PrintToFile());
-                        OutPut.Close();
+                        StreamReader? OutRead = FileCheckReader(FILEPATH);
 
-                        Console.WriteLine("Запись создана.\nНажмите любую клавишу чтобы продолжить...");
-                        Console.ReadKey();
+                        if (OutRead == null)
+                        {
+                            break;
+                        }
+
+                        Flights = ReadValuablesFromfile(OutRead);
+                        OutRead.Close();
+
+                        Flights = AddToFile(Flights);
+                        StreamWriter OutPut = new StreamWriter(FILEPATH);                        
+                        MakeFile(OutPut, Flights);
+                        OutPut.Close();
 
                         break;
                     }
                 case 7:
                     {
-                        if (Flights == null)
+                        StreamReader? OutRead = FileCheckReader(FILEPATH);
+
+                        if (OutRead == null)
                         {
-                            StreamReader OutRead = new StreamReader(FILEPATH);
-                            Flights = ReadValuablesFromfile(OutRead);
-                            OutRead.Close();
+                            break;
                         }
+                        Flights = ReadValuablesFromfile(OutRead);
+
+                        OutRead.Close();
 
                         Console.Clear();
                         Console.Write("Введите номер рейса, запись которого хотите удалить: ");
                         int FligthToDel = Convert.ToInt32(Console.ReadLine());
-/* TODO:: ИСправить запись в начало файла количества запаисейй и в эдите тоже.*/
+
                         Flights = DeleteFlight(Flights, FligthToDel);
-
+ 
                         StreamWriter OutPut = new StreamWriter(FILEPATH);
-                        for (int i = 0; i < Flights.Length; i++)
-                        {
-                            OutPut.WriteLine(Flights[i].PrintToFile());
-                        }
-
-                        Console.WriteLine("Запись удалена.\nНажмите любую клавишу чтобы продолжить...");
-                        Console.ReadKey();
+                        MakeFile(OutPut, Flights);
+                        OutPut.Close();
 
                         break;
                     }
                 case 8:
                     {
-                        Console.Clear();
-                        Console.Write("Корректировка файла.\nУкажите номер рейса количество которого нужно изменить");
 
-                        if (Flights == null)
+                        StreamReader? OutRead = FileCheckReader(FILEPATH);
+
+                        if (OutRead == null)
                         {
-                            StreamReader OutRead = new StreamReader(FILEPATH);
-                            Flights = ReadValuablesFromfile(OutRead);
-                            OutRead.Close();
+                            break;
                         }
+                        Flights = ReadValuablesFromfile(OutRead);
+                        OutRead.Close();
+
+                        Console.Clear();
+                        Console.Write("Корректировка файла.\nУкажите номер рейса количество которого нужно изменить: ");
                         
                         int FlightToEdit = Convert.ToInt32(Console.ReadLine());
 
                         Flights = EditFlight(Flights, FlightToEdit);
 
                         StreamWriter OutPut = new StreamWriter(FILEPATH);
-                        for (int i = 0; i < Flights.Length; i++)
-                        {
-                            OutPut.WriteLine(Flights[i].PrintToFile());
-                        }
-
-                        Console.WriteLine("\nНажмите любую клавишу чтобы продолжить...");
-                        Console.ReadKey();
+                        MakeFile(OutPut, Flights);
+                        OutPut.Close();
 
                         break;
                     }
                 default:
                     {
-                        Console.WriteLine("Введите число из списка выше!");
+                        Console.WriteLine("Введите число из списка выше!\nНажмите любую клавишу чтобы продолжить...");
+                        Console.ReadKey();
+
+
                         Console.Clear();
                         break;
                     }
-
             }
             Console.Clear();
         }
