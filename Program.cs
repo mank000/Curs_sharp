@@ -1,7 +1,4 @@
-﻿using System.IO;
-using static aeroflot.Aeroflot;
-
-namespace aeroflot;
+﻿namespace aeroflot;
 class Aeroflot
 {
 
@@ -35,7 +32,10 @@ class Aeroflot
         /*Создание записи.*/
         Flight new_flight = new Flight();
         Console.WriteLine("Введите номер рейса: ");
-        new_flight.NumberFlight = Convert.ToInt32(Console.ReadLine());
+        while (!int.TryParse(Console.ReadLine(), out new_flight.NumberFlight))
+        {
+            Console.WriteLine("Введите именно число!");
+        }
         Console.WriteLine("Пункт назначения: ");
         new_flight.Destination = Console.ReadLine();
         Console.WriteLine("Время отправления(в формате H:mm или HH:mm): ");
@@ -54,7 +54,10 @@ class Aeroflot
         }
         new_flight.ArriveTime = time;
         Console.WriteLine("Свободных мест: ");
-        new_flight.FreePlace = Convert.ToInt32(Console.ReadLine());
+        while (!int.TryParse(Console.ReadLine(), out new_flight.FreePlace))
+        {
+            Console.WriteLine("Введите именно число!");
+        }
 
         return new_flight;
     }
