@@ -5,9 +5,9 @@ class Aeroflot
     public struct Flight
     {
     public int NumberFlight;
-    public string? Destination;
-    public TimeOnly? DepartureTime;
-    public TimeOnly? ArriveTime;
+    public string Destination;
+    public TimeOnly DepartureTime;
+    public TimeOnly ArriveTime;
     public int FreePlace;
 
     public string PrintToFile()
@@ -145,13 +145,13 @@ class Aeroflot
 
     }
 
-    public static Flight[] ReadValuablesFromfile(StreamReader InRead)
+    public static Flight[]? ReadValuablesFromfile(StreamReader InRead)
     {
         /*Читаем файл*/
         string? line;
         line = InRead.ReadLine();
 
-        if (line == null)
+        if (line == null || line == "")
         {
             Console.WriteLine("\nФайл пуст, Создайте новый.");
             Console.WriteLine("\nНажмите любую клавишу чтобы продолжить...");
@@ -204,35 +204,38 @@ class Aeroflot
 
     public static Flight[] DeleteFlight(Flight[] Flights, int FlightToDel)
     {
-        /*Удаление записи*/
-        Flight[] FlightsDels = Flights;
-        bool key = false;
         bool deleted = false;
-        int IndexOfDeleted = 0;
+        int newLength = Flights.Length; 
 
         foreach (var Flight in Flights)
         {
             if (Flight.NumberFlight == FlightToDel)
-            {            
-                key = true;
-                deleted = true;
-            }
-            if (key)
             {
-                FlightsDels = new Flight[Flights.Length - 1];
-                Array.Copy(Flights, 0, FlightsDels, 0, IndexOfDeleted);
-                Array.Copy(Flights, IndexOfDeleted + 1, FlightsDels, IndexOfDeleted, Flights.Length - IndexOfDeleted - 1);
-                key = false;
+                deleted = true;
+                newLength--; 
             }
-            IndexOfDeleted++;
         }
+
         if (!deleted)
         {
             Console.WriteLine("Указанного номера не существует.\nНажмите любую клавишу чтобы продолжить...");
             Console.ReadKey();
-
-            return FlightsDels;
+            return Flights;
         }
+
+        Flight[] FlightsDels = new Flight[newLength];
+
+        int index = 0;
+
+        foreach (var Flight in Flights)
+        {
+            if (Flight.NumberFlight != FlightToDel)
+            {
+                FlightsDels[index] = Flight;
+                index++;
+            }
+        }
+
         Console.WriteLine("Запись удалена.\nНажмите любую клавишу чтобы продолжить...");
         Console.ReadKey();
         return FlightsDels;
@@ -375,7 +378,10 @@ class Aeroflot
                         }
                         Flights = ReadValuablesFromfile(OutRead);
                         OutRead.Close();
-
+                        if (Flights == null)
+                        {
+                            break;
+                        }
                         FindCity(Flights);
                         break;
                     }
@@ -391,7 +397,10 @@ class Aeroflot
                         Flights = ReadValuablesFromfile(OutRead);
 
                         OutRead.Close();
-
+                        if (Flights == null)
+                        {
+                            break;
+                        }
                         StreamWriter OutPut = new StreamWriter(FILEPATHDIFF);
                         MakeDifferentFile(Flights, OutPut);
                         OutPut.Close();
@@ -425,6 +434,11 @@ class Aeroflot
 
                         Flights = ReadValuablesFromfile(OutRead);
                         OutRead.Close();
+                        if (Flights == null)
+                        {
+                            break;
+                        }
+                        
 
                         Flights = AddToFile(Flights);
                         StreamWriter OutPut = new StreamWriter(FILEPATH);                        
@@ -444,6 +458,11 @@ class Aeroflot
                         Flights = ReadValuablesFromfile(OutRead);
 
                         OutRead.Close();
+
+                        if (Flights == null)
+                        {
+                            break;
+                        }
 
                         Console.Clear();
                         Console.Write("Введите номер рейса, запись которого хотите удалить: ");
@@ -469,6 +488,10 @@ class Aeroflot
                         Flights = ReadValuablesFromfile(OutRead);
                         OutRead.Close();
 
+                        if (Flights == null)
+                        {
+                            break;
+                        }
                         Console.Clear();
                         Console.Write("Корректировка файла.\nУкажите номер рейса количество которого нужно изменить: ");
                         
